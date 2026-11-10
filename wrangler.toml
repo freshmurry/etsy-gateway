@@ -1,0 +1,38 @@
+name = "etsy-gateway"
+main = "index.js"
+compatibility_date = "2025-06-01"
+
+# Gateway rate limit: authenticated /api requests allowed per minute.
+# Change here and redeploy to adjust; the Worker falls back to 60 when the
+# value is missing or invalid.
+[vars]
+RATE_LIMIT_PER_MINUTE = "60"
+
+# Critical OAuth state, token records, idempotency records, and the rate
+# limit window all live in one Durable Object instance so token refresh and
+# state consumption serialize. There is deliberately no KV binding: KV is
+# eventually consistent and was removed in the production readiness audit.
+[durable_objects]
+bindings = [
+  { name = "TOKEN_STORE", class_name = "EtsyTokenStore" }
+]
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["EtsyTokenStore"]
+
+# Separate test environment: its own Worker name and its own Durable Object
+# instance, so test authorizations and tokens never touch production state.
+# Deploy it with: wrangler deploy --env test
+# Migrations are declared once at the top level and apply to both
+# environments; the test environment gets its own storage because Durable
+# Object storage is per Worker.
+[env.test]
+name = "etsy-gateway-test"
+
+[env.test.vars]
+RATE_LIMIT_PER_MINUTE = "60"
+
+[[env.test.durable_objects.bindings]]
+name = "TOKEN_STORE"
+class_name = "EtsyTokenStore"

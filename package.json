@@ -1,0 +1,1 @@
+{"description":"Gateway Worker that holds Etsy Seller App credentials and OAuth tokens in Lawrence's Cloudflare account and exposes a single-secret API to Muse.","name":"etsy-gateway","private":true,"scripts":{"test":"node --test"},"type":"module","version":"0.1.0"}
